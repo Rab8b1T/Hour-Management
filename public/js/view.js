@@ -31,15 +31,18 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       const response = await fetchAPI(`/hours/${date}`);
       
+      // Ensure records is an array
+      const records = response.records || [];
+      
       // Show the data container and hide the no-data message
       document.getElementById('data-container').style.display = 'block';
       document.getElementById('no-data-message').classList.add('hidden');
       
       // Update the table with the records
-      updateRecordsTable(response.records);
+      updateRecordsTable(records);
       
       // Update the category list
-      updateCategoryList(response.records);
+      updateCategoryList(records);
     } catch (error) {
       if (error.message.includes('404')) {
         // No records for this date

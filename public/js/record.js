@@ -80,11 +80,14 @@ async function loadRecordsForDate(date) {
   try {
     const response = await fetchAPI(`/hours/${date}`);
     
+    // Ensure records is an array
+    const records = response.records || [];
+    
     // Clear current records
     currentRecords = [];
     
     // Process the records from the response
-    response.records.forEach(record => {
+    records.forEach(record => {
       currentRecords.push({
         section: record.section,
         hours: record.hours

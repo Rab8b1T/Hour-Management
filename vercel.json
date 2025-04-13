@@ -16,6 +16,10 @@
       "dest": "/api/hours/[date].js?date=$1"
     },
     {
+      "src": "/api/hours/week/([^/]+)",
+      "dest": "/api/hours/week/[date].js?date=$1"
+    },
+    {
       "src": "/api/goals/day/([^/]+)",
       "dest": "/api/goals/day/[date].js?date=$1"
     },
