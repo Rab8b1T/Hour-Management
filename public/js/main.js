@@ -1,7 +1,9 @@
 // Common functionality shared across all pages
 
-// API base URL - update this based on your deployment
-const API_BASE_URL = 'http://localhost:5000/api';
+// API base URL - dynamically determine based on environment
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? 'http://localhost:5000/api' 
+  : '/api';
 
 // List of all available sections
 const ALL_SECTIONS = [
@@ -104,15 +106,43 @@ function updateDateDisplay() {
 }
 
 // Make API call with error handling
-async function fetchAPI(endpoint, options = {}) {
+async function fetchAPI(endpoint, method = 'GET', data = null) {
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    // Prepare the request options
+    const options = {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+
+    // Add body data for POST and PUT requests
+    if (data && (method === 'POST' || method === 'PUT')) {
+      options.body = JSON.stringify(data);
+    }
+
+    // Build the full URL
+    const url = `${API_BASE_URL}${endpoint}`;
     
+    // Log request for debugging
+    console.log(`Making ${method} request to: ${url}`);
+    
+    const response = await fetch(url, options);
+    
+    // Handle non-2xx responses
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `API request failed with status ${response.status}`);
+      // Try to get error details from response
+      let errorMessage;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.msg || `API request failed with status ${response.status}`;
+      } catch (e) {
+        errorMessage = `API request failed with status ${response.status}`;
+      }
+      throw new Error(errorMessage);
     }
     
+    // Parse and return the response
     return await response.json();
   } catch (error) {
     console.error('API Error:', error);
@@ -123,4 +153,8 @@ async function fetchAPI(endpoint, options = {}) {
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
   updateDateDisplay();
+  
+  // Log environment information for debugging
+  console.log('Environment:', window.location.hostname === 'localhost' ? 'Development' : 'Production');
+  console.log('API Base URL:', API_BASE_URL);
 });
