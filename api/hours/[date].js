@@ -5,7 +5,6 @@ const Hour = require('../../server/models/Hour');
 // Connect to MongoDB
 const connectDB = async () => {
   if (mongoose.connections[0].readyState) {
-    console.log('Already connected to MongoDB');
     return;
   }
 
@@ -13,8 +12,6 @@ const connectDB = async () => {
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      bufferCommands: false,
-      serverSelectionTimeoutMS: 5000,
     });
     console.log('Connected to MongoDB');
   } catch (error) {
@@ -24,7 +21,7 @@ const connectDB = async () => {
 };
 
 // API handler
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   // Extract date from URL
   const { date } = req.query;
   
@@ -34,6 +31,7 @@ export default async function handler(req, res) {
   try {
     await connectDB();
   } catch (error) {
+    console.error('Database connection failed:', error);
     return res.status(500).json({ message: 'Database connection failed', error: error.message });
   }
   
@@ -42,14 +40,52 @@ export default async function handler(req, res) {
     try {
       const hours = await Hour.find({ date });
       console.log(`Found ${hours.length} records for date ${date}`);
-      return res.status(200).json(hours);
+      // Always return an array, even if empty
+      return res.status(200).json(hours || []);
     } catch (error) {
       console.error('Error fetching hours:', error);
-      return res.status(500).json({ message: 'Error fetching hours', error: error.message });
+      // Return empty array on error to avoid frontend crashes
+      return res.status(500).json([]);
+    }
+  }
+  
+  // Handle POST request
+  if (req.method === 'POST') {
+    try {
+      const newHour = new Hour(req.body);
+      const savedHour = await newHour.save();
+      return res.status(201).json(savedHour);
+    } catch (error) {
+      console.error('Error creating hour record:', error);
+      return res.status(500).json({ message: 'Error creating hour record', error: error.message });
+    }
+  }
+  
+  // Handle PUT request
+  if (req.method === 'PUT') {
+    try {
+      const { id } = req.body;
+      const updatedHour = await Hour.findByIdAndUpdate(id, req.body, { new: true });
+      return res.status(200).json(updatedHour);
+    } catch (error) {
+      console.error('Error updating hour record:', error);
+      return res.status(500).json({ message: 'Error updating hour record', error: error.message });
+    }
+  }
+  
+  // Handle DELETE request
+  if (req.method === 'DELETE') {
+    try {
+      const { id } = req.body;
+      await Hour.findByIdAndDelete(id);
+      return res.status(200).json({ message: 'Hour record deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting hour record:', error);
+      return res.status(500).json({ message: 'Error deleting hour record', error: error.message });
     }
   }
   
   // Handle other HTTP methods
-  res.setHeader('Allow', ['GET']);
+  res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
   res.status(405).end(`Method ${req.method} Not Allowed`);
-}
+};
