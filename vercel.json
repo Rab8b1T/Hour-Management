@@ -20,32 +20,19 @@
         "dest": "public/pages/index.html"
       },
       {
-        "src": "/record",
-        "dest": "public/pages/record.html"
+        "src": "/(css|js)/(.*)",
+        "dest": "public/$1/$2"
       },
       {
-        "src": "/view",
-        "dest": "public/pages/view.html"
-      },
-      {
-        "src": "/analytics",
-        "dest": "public/pages/analytics.html"
-      },
-      {
-        "src": "/goals",
-        "dest": "public/pages/goals.html"
-      },
-      {
-        "src": "/css/(.*)",
-        "dest": "public/css/$1"
-      },
-      {
-        "src": "/js/(.*)",
-        "dest": "public/js/$1"
+        "src": "/(record|view|analytics|goals)",
+        "dest": "public/pages/$1.html"
       },
       {
         "src": "/(.*)",
         "dest": "public/$1"
       }
-    ]
+    ],
+    "env": {
+      "NODE_ENV": "production"
+    }
   }
